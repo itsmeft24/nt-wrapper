@@ -24,10 +24,60 @@ impl Value {
             },
         }
     }
+    pub fn get_int(&self) -> Option<i64> {
+        unsafe {
+            if self.raw.type_ == NT_Type_NT_INTEGER {
+                Some(self.raw.data.v_int)
+            } else {
+                None
+            }
+        }
+    }
     pub fn get_double(&self) -> Option<f64> {
         unsafe {
             if self.raw.type_ == NT_Type_NT_DOUBLE {
                 Some(self.raw.data.v_double)
+            } else {
+                None
+            }
+        }
+    }
+    pub fn get_float(&self) -> Option<f32> {
+        unsafe {
+            if self.raw.type_ == NT_Type_NT_FLOAT {
+                Some(self.raw.data.v_float)
+            } else {
+                None
+            }
+        }
+    }
+    pub fn get_boolean(&self) -> Option<bool> {
+        unsafe {
+            if self.raw.type_ == NT_Type_NT_BOOLEAN {
+                Some(self.raw.data.v_boolean > 0)
+            } else {
+                None
+            }
+        }
+    }
+    pub fn get_string(&self) -> Option<String> {
+        unsafe {
+            if self.raw.type_ == NT_Type_NT_STRING {
+                let data = std::slice::from_raw_parts(self.raw.data.v_string.str_ as *const u8, self.raw.data.v_string.len as usize);
+                match std::string::String::from_utf8(data.to_vec()) {
+                    Ok(str) => Some(str),
+                    Err(_) => None
+                }
+            } else {
+                None
+            }
+        }
+    }
+    pub fn get_raw(&self) -> Option<Vec<u8>> {
+        unsafe {
+            if self.raw.type_ == NT_Type_NT_RAW {
+                let data = std::slice::from_raw_parts(self.raw.data.v_raw.data, self.raw.data.v_raw.size);
+                Some(data.to_vec())
             } else {
                 None
             }
