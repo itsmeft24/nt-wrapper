@@ -12,7 +12,44 @@ pub struct NetworkTableEntry {
 pub struct Value {
     raw: NT_Value,
 }
-
+impl From<f64> for Value {
+    fn from(value: f64) -> Self {
+        Self {
+            raw: NT_Value {
+                type_: NT_Type_NT_DOUBLE,
+                last_change: 0,
+                server_time: 0,
+                data: NT_Value__bindgen_ty_1 { v_double: value },
+            },
+        }
+    }
+}
+impl From<i64> for Value {
+    fn from(value: i64) -> Self {
+        Self {
+            raw: NT_Value {
+                type_: NT_Type_NT_INTEGER,
+                last_change: 0,
+                server_time: 0,
+                data: NT_Value__bindgen_ty_1 { v_int: value },
+            },
+        }
+    }
+}
+impl From<bool> for Value {
+    fn from(value: bool) -> Self {
+        Self {
+            raw: NT_Value {
+                type_: NT_Type_NT_BOOLEAN,
+                last_change: 0,
+                server_time: 0,
+                data: NT_Value__bindgen_ty_1 {
+                    v_boolean: value as i32,
+                },
+            },
+        }
+    }
+}
 impl Value {
     pub fn default() -> Self {
         Self {
@@ -63,10 +100,13 @@ impl Value {
     pub fn get_string(&self) -> Option<String> {
         unsafe {
             if self.raw.type_ == NT_Type_NT_STRING {
-                let data = std::slice::from_raw_parts(self.raw.data.v_string.str_ as *const u8, self.raw.data.v_string.len as usize);
+                let data = std::slice::from_raw_parts(
+                    self.raw.data.v_string.str_ as *const u8,
+                    self.raw.data.v_string.len as usize,
+                );
                 match std::string::String::from_utf8(data.to_vec()) {
                     Ok(str) => Some(str),
-                    Err(_) => None
+                    Err(_) => None,
                 }
             } else {
                 None
@@ -76,7 +116,8 @@ impl Value {
     pub fn get_raw(&self) -> Option<Vec<u8>> {
         unsafe {
             if self.raw.type_ == NT_Type_NT_RAW {
-                let data = std::slice::from_raw_parts(self.raw.data.v_raw.data, self.raw.data.v_raw.size);
+                let data =
+                    std::slice::from_raw_parts(self.raw.data.v_raw.data, self.raw.data.v_raw.size);
                 Some(data.to_vec())
             } else {
                 None
@@ -93,6 +134,11 @@ impl NetworkTableEntry {
             Some(value)
         } else {
             None
+        }
+    }
+    pub fn set_value(&mut self, value: Value) {
+        unsafe {
+            NT_SetEntryValue(self.handle, &value.raw as *const NT_Value);
         }
     }
 }
